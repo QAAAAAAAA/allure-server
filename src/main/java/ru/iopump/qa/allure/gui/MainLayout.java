@@ -64,7 +64,7 @@ public class MainLayout extends AppLayout {
         var dockerHub = new Anchor("https://hub.docker.com/r/kochetkovma/allure-server",
             new SvgIcon(new StreamResource("docker.svg", () -> getClass().getResourceAsStream("/icons/docker.svg"))));
         dockerHub.setTarget("_blank");
-        var linkedIn = new Anchor("https://www.linkedin.com/in/maxim-kochetkov-75178215a/",
+        var linkedIn = new Anchor("https://linkedin.com/in/kochetkov-ma",
             new SvgIcon(new StreamResource("linkedin.svg", () -> getClass().getResourceAsStream("/icons/linkedin.svg"))));
         linkedIn.setTarget("_blank");
 
