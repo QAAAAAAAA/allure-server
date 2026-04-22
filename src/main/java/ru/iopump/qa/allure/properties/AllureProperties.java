@@ -54,19 +54,22 @@ public class AllureProperties {
         private final String dir;
         private final String path;
         private final long historyLevel;
+        private final long uiInactivePerPath;
 
         public Reports() {
-            this("allure/reports/", "reports/", 20);
+            this("allure/reports/", "reports/", 20, 2);
         }
 
         @ConstructorBinding
         public Reports(String dir,
                        String path,
-                       long historyLevel) {
+                       long historyLevel,
+                       long uiInactivePerPath) {
 
             this.dir = dir;
             this.path = path;
             this.historyLevel = historyLevel;
+            this.uiInactivePerPath = uiInactivePerPath;
             this.dirPath = Paths.get(this.dir);
         }
     }
