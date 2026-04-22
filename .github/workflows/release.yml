@@ -1,9 +1,13 @@
-name: Upload Release Asset
+name: Release
 
 on:
   push:
     tags:
       - 'v*.*.*'
+
+env:
+  NODE_VERSION: "20.13.1"
+  IMAGE_NAME: sunhao111555/allure-server
 
 jobs:
   build:
@@ -14,9 +18,7 @@ jobs:
       - name: Fast checkout
         uses: actions/checkout@v4
       - name: Set RELEASE_VERSION
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        run: echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -29,52 +31,34 @@ jobs:
 
       ## Build Image ##
       - name: Build with Gradle
-        uses: eskatos/gradle-command-action@v3
-        with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
-          arguments: ' -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar'
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        run: ./gradlew --no-daemon -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar
 
       ## Release in DockerHub ##
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        env:
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
+          username: sunhao111555
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
           platforms: linux/amd64,linux/arm64
-          name: kochetkovma/allure-server
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          tags: "latest,${{ env.RELEASE_VERSION }}"
-          buildargs: RELEASE_VERSION
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.RELEASE_VERSION }}
 
       ## Release in GitHub ##
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+      - name: Create GitHub release and upload jar
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ env.RELEASE_VERSION }}
-          body: |
-            Changes in this Release
-            - First Change
+          name: Release ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
-          asset_name: allure-server.jar
-          asset_content_type: application/jar
