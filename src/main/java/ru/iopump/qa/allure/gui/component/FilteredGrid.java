@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Lists;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -45,7 +44,6 @@ public class FilteredGrid<T> {
     private final Span pageLabel;
     private final Button prevPageButton;
     private final Button nextPageButton;
-    private final ComboBox<Integer> pageSizeCombo;
     private final Map<Col<T>, String> filterValues = Maps.newLinkedHashMap();
     private final List<Col<T>> columnSpecList;
     private final Map<Grid.Column<T>, Supplier<String>> dynamicFooter = Maps.newHashMap();
@@ -63,7 +61,6 @@ public class FilteredGrid<T> {
         this.pageLabel = new Span();
         this.prevPageButton = new Button("Prev");
         this.nextPageButton = new Button("Next");
-        this.pageSizeCombo = new ComboBox<>("Rows");
         this.columnSpecList = columnSpecList;
 
         grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
@@ -158,21 +155,10 @@ public class FilteredGrid<T> {
             .map(this::addColumn)
             .collect(Collectors.toUnmodifiableList());
         cols.stream().findFirst()
-            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + filteredItems().size()))
-            );
+            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + filteredItems().size()));
     }
 
     private void paginationConfiguration() {
-        pageSizeCombo.setItems(20, 50, 100, 200);
-        pageSizeCombo.setValue(pageSize);
-        pageSizeCombo.addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                pageSize = event.getValue();
-                currentPage = 0;
-                refreshGridData();
-            }
-        });
-
         prevPageButton.addClickListener(event -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -189,7 +175,7 @@ public class FilteredGrid<T> {
     }
 
     private void configureContent() {
-        var pagination = new HorizontalLayout(prevPageButton, nextPageButton, pageLabel, pageSizeCombo);
+        var pagination = new HorizontalLayout(prevPageButton, nextPageButton, pageLabel);
         pagination.setWidthFull();
         pagination.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         pagination.expand(pageLabel);
@@ -264,7 +250,7 @@ public class FilteredGrid<T> {
 
         prevPageButton.setEnabled(currentPage > 0);
         nextPageButton.setEnabled(currentPage < totalPages - 1);
-        pageLabel.setText("Page %d / %d, total %d".formatted(currentPage + 1, totalPages, totalItems));
+        pageLabel.setText("Page %d / %d, total %d, rows %d".formatted(currentPage + 1, totalPages, totalItems, pageSize));
         updateFooters();
     }
 //endregion

@@ -55,3 +55,8 @@ CA.pem
 **/generated/**
 *generated*
 *-private*
+
+# Local build/tool caches
+.gradle-cache/
+.npm/
+.vaadin/
