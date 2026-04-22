@@ -1,12 +1,18 @@
 package ru.iopump.qa.allure.gui.component;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.vaadin.flow.component.HasComponents;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.provider.Query;
@@ -31,30 +37,53 @@ public class FilteredGrid<T> {
     public static final String FONT_FAMILY = "font-family";
     public static final String GERMANIA_ONE = "Germania One";
     private final static String GRID_CLASS = "report-grid";
-    private final ListDataProvider<T> dataProvider;
+    private final ListDataProvider<T> sourceDataProvider;
+    private final ListDataProvider<T> pageDataProvider;
     @Getter
     private final Grid<T> grid;
+    private final VerticalLayout content;
+    private final Span pageLabel;
+    private final Button prevPageButton;
+    private final Button nextPageButton;
+    private final ComboBox<Integer> pageSizeCombo;
+    private final Map<Col<T>, String> filterValues = Maps.newLinkedHashMap();
     private final List<Col<T>> columnSpecList;
     private final Map<Grid.Column<T>, Supplier<String>> dynamicFooter = Maps.newHashMap();
+    private int pageSize = 50;
+    private int currentPage = 0;
 
     public FilteredGrid(
         @NonNull final ListDataProvider<T> dataProvider,
         @NonNull final List<Col<T>> columnSpecList
     ) {
-        this.dataProvider = dataProvider;
+        this.sourceDataProvider = dataProvider;
+        this.pageDataProvider = new ListDataProvider<>(Lists.newArrayList());
         this.grid = new Grid<>();
+        this.content = new VerticalLayout();
+        this.pageLabel = new Span();
+        this.prevPageButton = new Button("Prev");
+        this.nextPageButton = new Button("Next");
+        this.pageSizeCombo = new ComboBox<>("Rows");
         this.columnSpecList = columnSpecList;
 
         grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
         baseConfigurationGrid();
         filterConfiguration();
+        paginationConfiguration();
+        configureContent();
 
-        updateFooters(); // Init footers
-        dataProvider.addDataProviderListener(event -> updateFooters()); // Update footers on change
+        refreshGridData();
+        sourceDataProvider.addDataProviderListener(event -> refreshGridData());
     }
 
     public FilteredGrid<T> addTo(HasComponents parent) {
-        parent.add(grid);
+        parent.add(content);
+        return this;
+    }
+
+    public FilteredGrid<T> addTo(VerticalLayout parent) {
+        parent.add(content);
+        parent.setFlexGrow(1, content);
         return this;
     }
 
@@ -68,7 +97,7 @@ public class FilteredGrid<T> {
             case NUMBER:
                 column = grid.addColumn(text(columnSpec));
                 final Supplier<String> footer = () -> {
-                    long amount = dataProvider.fetch(new Query<>(dataProvider.getFilter()))
+                    long amount = filteredItems().stream()
                         .mapToLong(item -> Long.parseLong(Str.toStr(columnSpec.getValue().apply(item))))
                         .sum();
                     return "Total: " + amount;
@@ -105,12 +134,10 @@ public class FilteredGrid<T> {
     private void addFilter(Col<T> spec, HeaderRow.HeaderCell headerCell) {
         final TextField filterField = new TextField();
         filterField.addValueChangeListener(event -> {
-            dataProvider.addFilter(
-                row -> {
-                    var value = spec.getValue().apply(row);
-                    return StringUtils.containsIgnoreCase(Str.toStr(value), filterField.getValue());
-                });
-            updateFooters();
+            filterValues.put(spec, event.getValue());
+            currentPage = 0;
+            applyFilter();
+            refreshGridData();
         });
         filterField.setValueChangeMode(ValueChangeMode.LAZY);
         filterField.setValueChangeTimeout(1000);
@@ -122,18 +149,56 @@ public class FilteredGrid<T> {
 
     private void baseConfigurationGrid() {
         grid.addClassName(GRID_CLASS);
-        grid.setDataProvider(dataProvider);
+        grid.setDataProvider(pageDataProvider);
         grid.removeAllColumns();
-        // grid.setHeightByRows(true); // deprecated
+        grid.setSizeFull();
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
 
         final List<Grid.Column<T>> cols = columnSpecList.stream()
             .map(this::addColumn)
             .collect(Collectors.toUnmodifiableList());
         cols.stream().findFirst()
-            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + dataProvider
-                .size(new Query<>(dataProvider.getFilter())))
+            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + filteredItems().size()))
             );
+    }
+
+    private void paginationConfiguration() {
+        pageSizeCombo.setItems(20, 50, 100, 200);
+        pageSizeCombo.setValue(pageSize);
+        pageSizeCombo.addValueChangeListener(event -> {
+            if (event.getValue() != null) {
+                pageSize = event.getValue();
+                currentPage = 0;
+                refreshGridData();
+            }
+        });
+
+        prevPageButton.addClickListener(event -> {
+            if (currentPage > 0) {
+                currentPage--;
+                refreshGridData();
+            }
+        });
+        nextPageButton.addClickListener(event -> {
+            int totalPages = totalPages(filteredItems().size());
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                refreshGridData();
+            }
+        });
+    }
+
+    private void configureContent() {
+        var pagination = new HorizontalLayout(prevPageButton, nextPageButton, pageLabel, pageSizeCombo);
+        pagination.setWidthFull();
+        pagination.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        pagination.expand(pageLabel);
+
+        content.setSizeFull();
+        content.setPadding(false);
+        content.setSpacing(true);
+        content.add(grid, pagination);
+        content.setFlexGrow(1, grid);
     }
 
     private Renderer<T> text(Col<T> columnSpec) {
@@ -157,6 +222,50 @@ public class FilteredGrid<T> {
 
     private void updateFooters() {
         dynamicFooter.forEach((col, sup) -> col.setFooter(sup.get()));
+    }
+
+    private void applyFilter() {
+        sourceDataProvider.setFilter(row -> filterValues.entrySet().stream()
+            .filter(entry -> StringUtils.isNotBlank(entry.getValue()))
+            .allMatch(entry -> {
+                var value = entry.getKey().getValue().apply(row);
+                return StringUtils.containsIgnoreCase(Str.toStr(value), entry.getValue());
+            }));
+    }
+
+    private List<T> filteredItems() {
+        return sourceDataProvider.fetch(new Query<>(sourceDataProvider.getFilter()))
+            .collect(Collectors.toList());
+    }
+
+    private int totalPages(int totalItems) {
+        if (totalItems == 0) {
+            return 1;
+        }
+        return (int) Math.ceil(totalItems / (double) pageSize);
+    }
+
+    private void refreshGridData() {
+        var filtered = filteredItems();
+        int totalItems = filtered.size();
+        int totalPages = totalPages(totalItems);
+
+        currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
+
+        int fromIndex = currentPage * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        List<T> pageItems = totalItems == 0
+            ? Lists.newArrayList()
+            : filtered.subList(fromIndex, toIndex);
+
+        pageDataProvider.getItems().clear();
+        pageDataProvider.getItems().addAll(pageItems);
+        pageDataProvider.refreshAll();
+
+        prevPageButton.setEnabled(currentPage > 0);
+        nextPageButton.setEnabled(currentPage < totalPages - 1);
+        pageLabel.setText("Page %d / %d, total %d".formatted(currentPage + 1, totalPages, totalItems));
+        updateFooters();
     }
 //endregion
 }

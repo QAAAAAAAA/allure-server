@@ -31,7 +31,6 @@ import java.util.UUID;
 
 import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 import static ru.iopump.qa.allure.gui.component.Col.Type.LINK;
-import static ru.iopump.qa.allure.gui.component.Col.Type.NUMBER;
 import static ru.iopump.qa.allure.gui.component.Col.prop;
 import static ru.iopump.qa.allure.gui.component.ResultUploadDialog.toMultiPartFile;
 import static ru.iopump.qa.allure.helper.Util.url;
@@ -56,6 +55,7 @@ public class ReportsView extends VerticalLayout {
                        final DateTimeResolver dateTimeResolver,
                        final AllureProperties allureProperties,
                        final MultipartProperties multipartProperties) {
+        setSizeFull();
         this.dateTimeResolver = dateTimeResolver;
         this.allureProperties = allureProperties;
         this.dateTimeResolver.retrieve();
@@ -101,7 +101,7 @@ public class ReportsView extends VerticalLayout {
         final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy
             .newProxyInstance(Thread.currentThread().getContextClassLoader(),
                 new Class[]{Collection.class},
-                (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
+                (proxy, method, args) -> method.invoke(jpaReportService.getAllForUi(), args));
 
         return new ListDataProvider<>(collection);
     }
@@ -110,17 +110,16 @@ public class ReportsView extends VerticalLayout {
     private List<Col<ReportEntity>> cols() {
         return ImmutableList.<Col<ReportEntity>>builder()
             .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
+            .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
+            .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
+            .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
+            .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
             .add(
                 Col.<ReportEntity>with()
                     .name("Created")
                     .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
                     .build()
             )
-            .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
-            .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
-            .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
-            .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
-            .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
             .build();
     }
 

@@ -31,10 +31,13 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -119,6 +122,26 @@ public class JpaReportService {
 
     public Collection<ReportEntity> getAll() {
         return repository.findAll(Sort.by("createdDateTime").descending());
+    }
+
+    public Collection<ReportEntity> getAllForUi() {
+        var reports = repository.findAll(Sort.by("createdDateTime").descending());
+        var inactivePerPath = Math.max(cfg.reports().uiInactivePerPath(), 0L);
+        Map<String, Long> inactiveCounterByPath = new HashMap<>();
+
+        return reports.stream()
+            .filter(report -> {
+                if (report.isActive()) {
+                    return true;
+                }
+                var count = inactiveCounterByPath.getOrDefault(report.getPath(), 0L);
+                if (count >= inactivePerPath) {
+                    return false;
+                }
+                inactiveCounterByPath.put(report.getPath(), count + 1);
+                return true;
+            })
+            .collect(Collectors.toList());
     }
 
     @SneakyThrows

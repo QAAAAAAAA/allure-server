@@ -59,6 +59,7 @@ allure:
     dir: allure/reports/
     path: reports/
     history-level: 20
+    ui-inactive-per-path: 2
   support-old-format: false
   date-format: "yy/MM/dd HH:mm:ss"
   clean:

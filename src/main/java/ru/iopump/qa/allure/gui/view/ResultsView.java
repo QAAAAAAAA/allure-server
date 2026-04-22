@@ -57,6 +57,7 @@ public class ResultsView extends VerticalLayout {
                        final AllureReportController allureReportController,
                        final DateTimeResolver dateTimeResolver,
                        final MultipartProperties multipartProperties) {
+        setSizeFull();
         this.dateTimeResolver = dateTimeResolver;
         this.dateTimeResolver.retrieve();
 
