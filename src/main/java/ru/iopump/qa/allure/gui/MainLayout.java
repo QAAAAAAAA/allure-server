@@ -30,6 +30,7 @@ public class MainLayout extends AppLayout {
     public MainLayout() {
         createHeader();
         createDrawer();
+        setDrawerOpened(false);
     }
 
     private void createHeader() {

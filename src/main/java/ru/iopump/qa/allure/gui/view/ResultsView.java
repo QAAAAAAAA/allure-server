@@ -127,7 +127,6 @@ public class ResultsView extends VerticalLayout {
                 .name("Created")
                 .value(e -> dateTimeResolver.printDate(e.getCreated()))
                 .build())
-            .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
             .build();
     }
 

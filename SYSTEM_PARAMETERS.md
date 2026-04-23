@@ -42,6 +42,7 @@ environment:
   # Cleanup
   ALLURE_CLEAN_DRY_RUN: "false"
   ALLURE_CLEAN_AGE_DAYS: 180
+  ALLURE_CLEAN_RESULTS_AGE_DAYS: 90
   ALLURE_CLEAN_TIME: "00:00"
 
   # Security (enable only if needed)
@@ -93,6 +94,7 @@ environment:
 | `ALLURE_CLEAN_DRY_RUN` | `false` | If `true`, cleanup only logs candidates without deleting. |
 | `ALLURE_CLEAN_TIME` | `00:00` | Daily cleanup scheduler trigger time. |
 | `ALLURE_CLEAN_AGE_DAYS` | `90` | Global report retention in days. |
+| `ALLURE_CLEAN_RESULTS_AGE_DAYS` | `90` | Retention period in days for uploaded `results` directories. |
 | `ALLURE_CLEAN_PATHS_0_PATH` | `manual_uploaded` | Logical report path for the first path-specific retention rule. |
 | `ALLURE_CLEAN_PATHS_0_AGE_DAYS` | `30` | Retention (days) for `ALLURE_CLEAN_PATHS_0_PATH`. |
 

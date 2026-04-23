@@ -58,5 +58,6 @@ CA.pem
 
 # Local build/tool caches
 .gradle-cache/
+.gradle-cache-docker/
 .npm/
 .vaadin/

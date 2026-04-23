@@ -66,6 +66,7 @@ allure:
     dryRun: false
     time: "00:00"
     ageDays: 90
+    results-age-days: 90
     paths:
       - path: "manual_uploaded"
         ageDays: 30

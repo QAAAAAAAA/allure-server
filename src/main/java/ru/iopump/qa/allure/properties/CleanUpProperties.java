@@ -24,18 +24,20 @@ public class CleanUpProperties {
     private final boolean dryRun;
     private final LocalTime time;
     private final int ageDays;
+    private final int resultsAgeDays;
     private final Collection<PathCleanUpItem> paths;
     private final int minAge;
 
     public CleanUpProperties() {
-        this(false, MIDNIGHT, 0, Collections.emptyList());
+        this(false, MIDNIGHT, 90, Collections.emptyList(), 90);
     }
 
     @ConstructorBinding
-    public CleanUpProperties(boolean dryRun, LocalTime time, int ageDays, Collection<PathCleanUpItem> paths) {
+    public CleanUpProperties(boolean dryRun, LocalTime time, int ageDays, Collection<PathCleanUpItem> paths, int resultsAgeDays) {
         this.dryRun = defaultIfNull(dryRun, false);
         this.time = defaultIfNull(time, MIDNIGHT);
         this.ageDays = defaultIfNull(ageDays, 90);
+        this.resultsAgeDays = defaultIfNull(resultsAgeDays, 90);
         this.paths = defaultIfNull(paths, Collections.emptyList());
 
         this.minAge = concat(Stream.of(ageDays), this.paths.stream().map(PathCleanUpItem::getAgeDays)).min(naturalOrder()).orElse(0);
@@ -47,6 +49,10 @@ public class CleanUpProperties {
 
     public LocalDateTime getEdgeDate() {
         return LocalDateTime.now().minusDays(this.ageDays);
+    }
+
+    public LocalDateTime getResultsEdgeDate() {
+        return LocalDateTime.now().minusDays(this.resultsAgeDays);
     }
 
     public boolean isNotDryRun() {

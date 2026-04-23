@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   allure-server:
     # For local debug #
@@ -9,11 +8,12 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_DATABASE: postgresql
-      SPRING_JPA_HIBERNATE_DDL-AUTO: update # Careful! 'create' destroy data! https://stackoverflow.com/questions/21113154/spring-boot-ddl-auto-generator
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update # Careful! 'create' destroys data!
       TMS_ENABLED: 'false'
       TMS_HOST: jira.localhost
       TMS_TOKEN: '<token-here>'
-      TMS_DRYRUN: 'false'
+      TMS_DRY_RUN: 'false'
+      ALLURE_CLEAN_RESULTS_AGE_DAYS: 90
     ports:
       - 8080:8080
     volumes:
