@@ -18,6 +18,10 @@ import ru.iopump.qa.allure.properties.CleanUpProperties;
 import ru.iopump.qa.allure.repo.JpaReportRepository;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +44,7 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
     private final AllureProperties allureProperties;
     private final CleanUpProperties cleanUpProperties;
     private final JpaReportRepository repository;
+    private final ResultService resultService;
     private final ObjectMapper objectMapper;
 
     private static String print(Collection<Pair<ReportEntity, Boolean>> removedReports) {
@@ -111,7 +116,10 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
                         })
                 ).toList();
 
+            var cleanedResults = cleanResultsByAge();
+
             if (log.isInfoEnabled()) log.info("CleanUp finished with results: " + print(processedReports));
+            if (log.isInfoEnabled()) log.info("CleanUp finished for results directories: {} removed", cleanedResults);
 
         }, triggerContext -> {
 
@@ -145,5 +153,46 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
             isDeleted = true;
 
         return Pair.of(report, isDeleted);
+    }
+
+    private long cleanResultsByAge() {
+        final LocalDateTime resultsEdgeDate = cleanUpProperties.getResultsEdgeDate();
+        try {
+            return resultService.getAll().stream()
+                .filter(resultDir -> isCreatedBefore(resultDir, resultsEdgeDate))
+                .map(Path::getFileName)
+                .filter(fileName -> fileName != null)
+                .map(Path::toString)
+                .peek(uuid -> log.info("Result directory '{}' scheduled for cleanup (older than {})", uuid, resultsEdgeDate))
+                .map(uuid -> {
+                    if (cleanUpProperties.isNotDryRun()) {
+                        try {
+                            resultService.internalDeleteByUUID(uuid);
+                            return true;
+                        } catch (IOException e) {
+                            log.warn("Failed to cleanup result directory '{}': {}", uuid, e.getMessage());
+                            return false;
+                        }
+                    } else {
+                        return true;
+                    }
+                })
+                .filter(Boolean::booleanValue)
+                .count();
+        } catch (IOException e) {
+            log.warn("Failed to read results directories for cleanup: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    private boolean isCreatedBefore(Path directory, LocalDateTime edgeDate) {
+        try {
+            BasicFileAttributes attributes = Files.readAttributes(directory, BasicFileAttributes.class);
+            var created = LocalDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
+            return created.isBefore(edgeDate);
+        } catch (IOException e) {
+            log.warn("Failed to read attributes for '{}': {}", directory, e.getMessage());
+            return false;
+        }
     }
 }

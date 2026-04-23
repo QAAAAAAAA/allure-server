@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
@@ -70,6 +72,9 @@ public class ReportsView extends VerticalLayout {
             asProvider(jpaReportService),
             cols()
         );
+        this.reports.getGrid().sort(List.of(
+            new GridSortOrder<>(this.reports.getGrid().getColumnByKey("Created"), SortDirection.DESCENDING)
+        ));
         this.uploadButton = new Button("Upload report");
         this.deleteSelection = new Button("Delete selection",
             new Icon(VaadinIcon.CLOSE_CIRCLE),
@@ -113,7 +118,6 @@ public class ReportsView extends VerticalLayout {
             .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
             .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
             .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
-            .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
             .add(
                 Col.<ReportEntity>with()
                     .name("Created")
@@ -121,10 +125,6 @@ public class ReportsView extends VerticalLayout {
                     .build()
             )
             .build();
-    }
-
-    private String buildUrl(ReportEntity e) {
-        return e.getBuildUrl();
     }
 
     private String displayUrl(ReportEntity e) {

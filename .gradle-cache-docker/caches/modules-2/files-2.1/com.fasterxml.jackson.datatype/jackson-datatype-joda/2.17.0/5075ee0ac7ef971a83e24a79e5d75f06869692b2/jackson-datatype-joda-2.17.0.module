@@ -1,0 +1,140 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.fasterxml.jackson.datatype",
+    "module": "jackson-datatype-joda",
+    "version": "2.17.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "maven": {
+      "version": "3.6.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-annotations",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-core",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-databind",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "joda-time",
+          "module": "joda-time",
+          "version": {
+            "requires": "2.10.14"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson",
+          "module": "jackson-bom",
+          "version": {
+            "requires": "2.17.0"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        }
+      ],
+      "files": [
+        {
+          "name": "jackson-datatype-joda-2.17.0.jar",
+          "url": "jackson-datatype-joda-2.17.0.jar",
+          "size": 75449,
+          "sha512": "7a3005bec4062e344a79c0aaaf90c0e6b98a4aeaeaa985deea1afce05d0d3a115d397f940c0b989205491f7a6ff3c722bb9fee9e380ceb42ff6c1a9e7040bb41",
+          "sha256": "c5612111c05a963242cc0471b1f46848dc4834d6e0fcf987381bf6b2e525fff7",
+          "sha1": "add153032d4124ab5f1ce97284cb64f835d47c3f",
+          "md5": "88e20f2e06d080de98869186181359db"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-annotations",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-core",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson.core",
+          "module": "jackson-databind",
+          "version": {
+            "requires": "2.17.0"
+          }
+        },
+        {
+          "group": "joda-time",
+          "module": "joda-time",
+          "version": {
+            "requires": "2.10.14"
+          }
+        },
+        {
+          "group": "com.fasterxml.jackson",
+          "module": "jackson-bom",
+          "version": {
+            "requires": "2.17.0"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        }
+      ],
+      "files": [
+        {
+          "name": "jackson-datatype-joda-2.17.0.jar",
+          "url": "jackson-datatype-joda-2.17.0.jar",
+          "size": 75449,
+          "sha512": "7a3005bec4062e344a79c0aaaf90c0e6b98a4aeaeaa985deea1afce05d0d3a115d397f940c0b989205491f7a6ff3c722bb9fee9e380ceb42ff6c1a9e7040bb41",
+          "sha256": "c5612111c05a963242cc0471b1f46848dc4834d6e0fcf987381bf6b2e525fff7",
+          "sha1": "add153032d4124ab5f1ce97284cb64f835d47c3f",
+          "md5": "88e20f2e06d080de98869186181359db"
+        }
+      ]
+    }
+  ]
+}
